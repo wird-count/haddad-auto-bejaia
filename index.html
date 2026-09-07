@@ -41,56 +41,6 @@
   50% { transform: scale(1.06); opacity: 0.82; }
 }
 </style>
-
-
-<style>
-@keyframes airportPulse {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.06); opacity: 0.82; }
-}
-
-/* Écriture calligraphique au-dessus du logo */
-.brand-calligraphy {
-  font-family: 'Great Vibes', cursive;
-  font-size: 4rem;
-  margin: 0 0 15px 0;
-  line-height: 1.2;
-  text-align: center;
-  background: linear-gradient(135deg, #2670df 0%, #089bdf 25%, #00d5ff 50%, #b7f0fb 75%, #fbfbfa 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-shadow: 0 0 18px rgba(212, 175, 55, 0.35);
-  animation: titleGlow 4s ease-in-out infinite alternate, fadeInUp 1.2s ease-out;
-}
-
-@keyframes titleGlow {
-  0% {
-    filter: drop-shadow(0 0 2px rgba(1, 120, 255, 0.977));
-  }
-  100% {
-    filter: drop-shadow(0 0 12px rgba(255, 255, 255));
-  }
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(15px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@media (max-width: 768px) {
-  .brand-calligraphy {
-    font-size: 2.8rem;
-    margin-bottom: 10px;
-  }
-}
-</style>
-
 </head>
 
 
@@ -119,18 +69,19 @@
     </div>
   </header>
 
-<!-- ===================== BANDEAU DE TITRE SOUS NAVBAR ===================== -->
-
 
   <!-- ===================== HERO ===================== -->
   <section class="hero" id="accueil">
 
     <div class="container hero-content">
-        <h1 class="brand-calligraphy reveal">Haddad &nbsp; auto &nbsp; BeJawia</h1>
-      <img src="images/logo-haddad-auto.png" alt="Logo Haddad Auto Béjaïa — vente et importation de véhicules" class="hero-logo reveal">
-      <p class="hero-eyebrow reveal">Concessionnaire automobile — Béjaïa, Algérie</p>
       <h1 class="reveal">HADDAD AUTO BEJAÏA</h1>
       <p class="hero-sub reveal">Votre prochaine voiture commence ici.</p>
+      <br>
+      <hr>
+      <br>
+      <img src="images/logo-haddad-auto.png" alt="Logo Haddad Auto Béjaïa — vente et importation de véhicules" class="hero-logo reveal">
+      <p class="hero-eyebrow reveal">Concessionnaire automobile — Béjaïa, Algérie</p>
+
       <p class="hero-text reveal">Découvrez notre sélection de véhicules et bénéficiez d'un accompagnement professionnel à Béjaïa.</p>
       <div class="hero-buttons reveal">
         <a href="#location" class="btn btn-gold">Louer un véhicule</a>

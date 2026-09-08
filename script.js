@@ -179,9 +179,33 @@ function formatPhone(num) {
   return num.replace(/(\d{2})(?=\d)/g, "$1 ").trim();
 }
 
-function waLink(message) {
-  return `https://wa.me/${dealership.whatsapp}?text=${encodeURIComponent(message)}`;
+function waLink(message, waId = dealership.whatsapp) {
+  return `https://wa.me/${waId}?text=${encodeURIComponent(message)}`;
 }
+
+const PHONE_CONTACTS = [
+  {
+    label: "Téléphone 1",
+    display: formatPhone(dealership.phone),
+    tel: dealership.phoneIntl,
+    wa: "213553021122"
+  },
+  {
+    label: "Téléphone 2",
+    display: formatPhone(dealership.phone2),
+    tel: dealership.phone2Intl,
+    wa: "213540022441"
+  },
+  {
+    label: "Depuis la France",
+    display: dealership.phoneFr,
+    tel: dealership.phoneFr,
+    wa: "33745585978",
+    tag: '<span class="tag tag-fr">International</span>'
+  }
+];
+
+const waDefaultMsg = () => `Bonjour, je vous contacte depuis le site de ${dealership.name}.`;
 
 /* ================= Rendu Location ================= */
 function renderRentals() {
@@ -225,9 +249,40 @@ function specRow(icon, label, value) {
   return `<div>${icon}<span>${label} : ${v}</span></div>`;
 }
 
+let activeBrand = "all";
+
+function uniqueSaleBrands() {
+  return [...new Set(VEHICLES.map(v => v.brand))];
+}
+
+function renderBrandFilters() {
+  const el = $("#brandFilters");
+  if (!el) return;
+  const brands = uniqueSaleBrands();
+  el.innerHTML = `
+    <button type="button" class="brand-filter${activeBrand === "all" ? " is-active" : ""}" data-brand="all" aria-pressed="${activeBrand === "all"}">Tous</button>
+    ${brands.map(b => `
+      <button type="button" class="brand-filter${activeBrand === b ? " is-active" : ""}" data-brand="${b}" aria-pressed="${activeBrand === b}">${b}</button>
+    `).join("")}
+  `;
+  el.querySelectorAll(".brand-filter").forEach(btn => {
+    btn.addEventListener("click", () => {
+      activeBrand = btn.dataset.brand;
+      renderBrandFilters();
+      renderVehicles();
+      initReveal();
+    });
+  });
+}
+
 function renderVehicles() {
   const grid = $("#vehiclesGrid");
-  grid.innerHTML = VEHICLES.map((v, i) => {
+  const list = activeBrand === "all" ? VEHICLES : VEHICLES.filter(v => v.brand === activeBrand);
+  if (!list.length) {
+    grid.innerHTML = `<p class="vehicles-empty">Aucun véhicule pour cette marque.</p>`;
+    return;
+  }
+  grid.innerHTML = list.map((v, i) => {
     const media = v.image
       ? `<img src="${v.image}" alt="${v.alt}" loading="lazy">`
       : `<div style="position:absolute;inset:0;display:grid;place-items:center;color:#9a9aa0;font-weight:700;padding:1rem;text-align:center;background:#1d1d20;">Photo sur demande</div>`;
@@ -277,18 +332,29 @@ function contactCard(icon, title, value, href, extraTag) {
     <div class="contact-card reveal">
       <div class="contact-icon">${icon}</div>
       <h3>${title}</h3>
-      <a class="value" href="${href}">${value}</a>
+      <a class="value" href="${href}" target="_self">${value}</a>
       ${extraTag || ""}
+    </div>`;
+}
+
+function phoneContactCard(p) {
+  return `
+    <div class="contact-card contact-card--phone reveal">
+      <div class="contact-icon">${phoneIcon}</div>
+      <h3>${p.label}</h3>
+      <p class="contact-number">${p.display}</p>
+      ${p.tag || ""}
+      <div class="contact-actions">
+        <a href="tel:${p.tel}" target="_self" class="btn btn-ghost btn-contact" aria-label="Appeler ${p.display}">Appel</a>
+        <a href="${waLink(waDefaultMsg(), p.wa)}" target="_blank" rel="noopener" class="btn btn-whatsapp btn-contact" aria-label="WhatsApp ${p.display}">WhatsApp</a>
+      </div>
     </div>`;
 }
 
 function renderContact() {
   const grid = $("#contactGrid");
   grid.innerHTML =
-    contactCard(phoneIcon, "Téléphone 1", formatPhone(dealership.phone), `tel:${dealership.phoneIntl}`) +
-    contactCard(phoneIcon, "Téléphone 2", formatPhone(dealership.phone2), `tel:${dealership.phone2Intl}`) +
-    contactCard(waIcon, "WhatsApp", formatPhone(dealership.phone), waLink(`Bonjour, je vous contacte depuis le site de ${dealership.name}.`), '<span class="tag tag-wa">Réponse rapide</span>') +
-    contactCard(phoneIcon, "Depuis la France", dealership.phoneFr, `tel:${dealership.phoneFr}`, '<span class="tag tag-fr">International</span>') +
+    PHONE_CONTACTS.map(phoneContactCard).join("") +
     contactCard(pinIcon, "Adresse", dealership.address, "#localisation") +
     contactCard(clockIcon, "Horaires", dealership.hours, "#contact");
 }
@@ -303,7 +369,6 @@ function renderMap() {
 
 /* ================= Footer / liens globaux ================= */
 function renderGlobal() {
-  $("#waFloat").href = waLink(`Bonjour, je vous contacte depuis le site de ${dealership.name}.`);
   $("#footerContact").innerHTML = `
     <h4>Contact</h4>
     <a href="tel:${dealership.phoneIntl}">Tél 1 : ${formatPhone(dealership.phone)}</a>
@@ -312,6 +377,42 @@ function renderGlobal() {
     <a href="${waLink("Bonjour !")}" target="_blank" rel="noopener">WhatsApp</a>
     <a href="#localisation">${dealership.address}</a>`;
   $("#year").textContent = new Date().getFullYear();
+}
+
+/* ================= WhatsApp flottant ================= */
+function closeWaLauncher() {
+  const launcher = $("#waLauncher");
+  const panel = $("#waPanel");
+  const btn = $("#waFloat");
+  if (!launcher) return;
+  launcher.classList.remove("is-open");
+  if (panel) panel.hidden = true;
+  if (btn) btn.setAttribute("aria-expanded", "false");
+}
+
+function initWaLauncher() {
+  const launcher = $("#waLauncher");
+  const panel = $("#waPanel");
+  const btn = $("#waFloat");
+  if (!launcher || !panel || !btn) return;
+
+  panel.innerHTML = PHONE_CONTACTS.map(p => `
+    <a class="wa-panel-link" href="${waLink(waDefaultMsg(), p.wa)}" target="_blank" rel="noopener">
+      <span class="wa-panel-label">${p.label}</span>
+      <span class="wa-panel-num">${p.display}</span>
+    </a>
+  `).join("");
+
+  btn.addEventListener("click", e => {
+    e.stopPropagation();
+    const open = launcher.classList.toggle("is-open");
+    panel.hidden = !open;
+    btn.setAttribute("aria-expanded", String(open));
+  });
+
+  document.addEventListener("click", e => {
+    if (!launcher.contains(e.target)) closeWaLauncher();
+  });
 }
 
 /* ================= Navigation mobile ================= */
@@ -348,11 +449,13 @@ function initReveal() {
 /* ================= Init ================= */
 document.addEventListener("DOMContentLoaded", () => {
   renderRentals();
+  renderBrandFilters();
   renderVehicles();
   renderReviews();
   renderContact();
   renderMap();
   renderGlobal();
   initNav();
+  initWaLauncher();
   initReveal();
 });

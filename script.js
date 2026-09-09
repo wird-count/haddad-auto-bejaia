@@ -9,7 +9,7 @@ const dealership = {
   phoneIntl: "+213553021122",
   phone2Intl: "+213540022441",
   phoneFr: "+33745585978",
-  whatsapp: "213553021122",
+  whatsapp: "213540022441",
   address: "Sidi Ahmed, Béjaïa, Algérie",
   hours: " 9h - 19h sauf le vendredi ",
   city: "Béjaïa",
@@ -188,7 +188,7 @@ const PHONE_CONTACTS = [
     label: "Téléphone 1",
     display: formatPhone(dealership.phone),
     tel: dealership.phoneIntl,
-    wa: "213553021122"
+    wa: null
   },
   {
     label: "Téléphone 2",
@@ -231,10 +231,16 @@ function renderRentals() {
             return `<span>${checkIcon}${text}</span>`;
           }).join("")}
         </div>
-        <a href="${waLink(`Bonjour, je suis intéressé par la location du ${r.brand} ${r.model}.`)}" target="_blank" rel="noopener" class="btn btn-whatsapp" style="width:100%;margin-top:auto">Réserver sur WhatsApp</a>
+        <button type="button" class="btn btn-whatsapp rental-wa-btn" data-ridx="${i}" style="width:100%;margin-top:auto">Réserver sur WhatsApp</button>
       </div>
     </article>`;
   }).join("");
+  grid.querySelectorAll(".rental-wa-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const r = RENTALS[Number(btn.dataset.ridx)];
+      if (r) openWaChoiceModal(rentalWaMessage(r));
+    });
+  });
 }
 
 /* ================= Rendu des véhicules ================= */
@@ -278,6 +284,7 @@ function renderBrandFilters() {
 function renderVehicles() {
   const grid = $("#vehiclesGrid");
   const list = activeBrand === "all" ? VEHICLES : VEHICLES.filter(v => v.brand === activeBrand);
+  currentVehicleList = list;
   if (!list.length) {
     grid.innerHTML = `<p class="vehicles-empty">Aucun véhicule pour cette marque.</p>`;
     return;
@@ -287,7 +294,6 @@ function renderVehicles() {
       ? `<img src="${v.image}" alt="${v.alt}" loading="lazy">`
       : `<div style="position:absolute;inset:0;display:grid;place-items:center;color:#9a9aa0;font-weight:700;padding:1rem;text-align:center;background:#1d1d20;">Photo sur demande</div>`;
     const price = v.price ? `${v.price.toLocaleString("fr-FR")} DA` : ON_DEMAND;
-    const waMsg = `Bonjour, je suis intéressé par le véhicule ${v.brand} ${v.model} (${dealership.name}).`;
     return `
     <article class="vehicle-card reveal" style="transition-delay:${(i % 3) * 90}ms">
       <div class="vehicle-media">
@@ -305,12 +311,18 @@ function renderVehicles() {
         </div>
         <p class="vehicle-price">${price} ${v.price ? '<small>DA</small>' : ''}</p>
         <div class="vehicle-actions">
-          <a href="${waLink(waMsg)}" target="_blank" rel="noopener" class="btn btn-whatsapp">WhatsApp</a>
+          <button type="button" class="btn btn-whatsapp vehicle-wa-btn" data-vidx="${i}">WhatsApp</button>
           <a href="tel:${dealership.phoneIntl}" class="btn btn-ghost">Détails</a>
         </div>
       </div>
     </article>`;
   }).join("");
+  grid.querySelectorAll(".vehicle-wa-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const v = currentVehicleList[Number(btn.dataset.vidx)];
+      if (v) openWaChoiceModal(vehicleWaMessage(v));
+    });
+  });
 }
 
 /* ================= Rendu Avis ================= */
@@ -346,7 +358,7 @@ function phoneContactCard(p) {
       ${p.tag || ""}
       <div class="contact-actions">
         <a href="tel:${p.tel}" target="_self" class="btn btn-ghost btn-contact" aria-label="Appeler ${p.display}">Appel</a>
-        <a href="${waLink(waDefaultMsg(), p.wa)}" target="_blank" rel="noopener" class="btn btn-whatsapp btn-contact" aria-label="WhatsApp ${p.display}">WhatsApp</a>
+        ${p.wa ? `<a href="${waLink(waDefaultMsg(), p.wa)}" target="_blank" rel="noopener" class="btn btn-whatsapp btn-contact" aria-label="WhatsApp ${p.display}">WhatsApp</a>` : ""}
       </div>
     </div>`;
 }
@@ -396,7 +408,7 @@ function initWaLauncher() {
   const btn = $("#waFloat");
   if (!launcher || !panel || !btn) return;
 
-  panel.innerHTML = PHONE_CONTACTS.map(p => `
+  panel.innerHTML = VEHICLE_WA_NUMBERS.map(p => `
     <a class="wa-panel-link" href="${waLink(waDefaultMsg(), p.wa)}" target="_blank" rel="noopener">
       <span class="wa-panel-label">${p.label}</span>
       <span class="wa-panel-num">${p.display}</span>
@@ -446,6 +458,63 @@ function initReveal() {
   document.querySelectorAll(".reveal").forEach(el => io.observe(el));
 }
 
+/* ================= Modale WhatsApp véhicule ================= */
+/* Numéros WhatsApp valides pour les véhicules (le 0553 n'est PAS sur WhatsApp) */
+const VEHICLE_WA_NUMBERS = [
+  { label: "WhatsApp Algérie", display: formatPhone(dealership.phone2), wa: "213540022441" },
+  { label: "Depuis la France", display: "+33 7 45 58 59 78", wa: "33745585978" }
+];
+
+let currentVehicleList = [];
+
+/* Message pré-rempli avec les caractéristiques du véhicule */
+function vehicleWaMessage(v) {
+  const specs = [];
+  if (v.year)    specs.push(`Année : ${v.year}`);
+  if (v.fuel)    specs.push(`Carburant : ${v.fuel}`);
+  if (v.gearbox) specs.push(`Boîte : ${v.gearbox}`);
+  if (v.mileage) specs.push(`Kilométrage : ${v.mileage}`);
+  let msg = `Bonjour ${dealership.name},\nJe suis intéressé par le véhicule ${v.brand} ${v.model}.`;
+  if (specs.length) msg += `\nCaractéristiques : ${specs.join(" · ")}.`;
+  msg += `\nPouvez-vous m'envoyer le prix et plus de détails ? Merci.`;
+  return msg;
+}
+
+/* Message pré-rempli pour la location */
+function rentalWaMessage(r) {
+  return `Bonjour ${dealership.name},\nJe souhaite réserver le véhicule de location ${r.brand} ${r.model}.\nBoîte : ${r.gearbox} · Tarif : ${r.price.toLocaleString("fr-FR")} DA/jour.\nLivraison aéroport disponible.\nPouvez-vous me confirmer les disponibilités ? Merci.`;
+}
+
+function openWaChoiceModal(msg) {
+  const modal = $("#vehicleWaModal");
+  if (!modal) return;
+  $("#vehicleWaNumbers").innerHTML = VEHICLE_WA_NUMBERS.map(n => `
+    <a class="wa-panel-link" href="${waLink(msg, n.wa)}" target="_blank" rel="noopener">
+      <span class="wa-panel-label">${n.label}</span>
+      <span class="wa-panel-num">${n.display}</span>
+    </a>
+  `).join("");
+  modal.hidden = false;
+  document.body.style.overflow = "hidden";
+}
+
+function closeWaChoiceModal() {
+  const modal = $("#vehicleWaModal");
+  if (!modal) return;
+  modal.hidden = true;
+  document.body.style.overflow = "";
+}
+
+function initWaChoiceModal() {
+  const backdrop = $("#vehicleWaBackdrop");
+  const closeBtn = $("#vehicleWaClose");
+  if (backdrop) backdrop.addEventListener("click", closeWaChoiceModal);
+  if (closeBtn) closeBtn.addEventListener("click", closeWaChoiceModal);
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape") closeWaChoiceModal();
+  });
+}
+
 /* ================= Init ================= */
 document.addEventListener("DOMContentLoaded", () => {
   renderRentals();
@@ -457,5 +526,6 @@ document.addEventListener("DOMContentLoaded", () => {
   renderGlobal();
   initNav();
   initWaLauncher();
+  initWaChoiceModal();
   initReveal();
 });

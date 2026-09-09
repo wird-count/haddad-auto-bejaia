@@ -41,6 +41,7 @@
   50% { transform: scale(1.06); opacity: 0.82; }
 }
 </style>
+<base target="_blank">
 </head>
 
 
@@ -299,6 +300,17 @@
     <button type="button" class="whatsapp-float" id="waFloat" aria-label="Choisir un numéro WhatsApp" aria-expanded="false" aria-controls="waPanel">
       <svg viewBox="0 0 32 32" fill="currentColor" aria-hidden="true"><path d="M16 3C9.4 3 4 8.3 4 14.9c0 2.6.8 5 2.3 7L4.5 28l6.3-1.7c1.9 1 3.9 1.6 6.2 1.6 6.6 0 12-5.3 12-11.9C29 8.3 23.6 3 16 3zm0 21.8c-2 0-3.9-.6-5.6-1.6l-.4-.2-3.7 1 1-3.6-.3-.4a9.9 9.9 0 01-2-6c0-5.4 4.5-9.9 10-9.9s10 4.4 10 9.9-4.5 9.8-10 9.8zm5.5-7.4c-.3-.2-1.8-.9-2-1-.3-.1-.5-.2-.7.2-.2.3-.8 1-1 1.2-.2.2-.4.2-.7.1-1.9-.9-3.1-1.7-4.3-3.8-.3-.6.4-.5 1-1.8.1-.2 0-.4 0-.6l-1-2.2c-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4-.3.3-1.1 1.1-1.1 2.7s1.2 3.1 1.3 3.3c.2.2 2.3 3.5 5.5 4.9 2.1.9 2.9 1 3.9.8.6-.1 1.8-.7 2-1.4.2-.7.2-1.4.2-1.5-.1-.2-.3-.3-.7-.4z"/></svg>
     </button>
+  </div>
+
+  <!-- Modale choix numéro WhatsApp (véhicules) -->
+  <div class="vehicle-wa-modal" id="vehicleWaModal" hidden>
+    <div class="vehicle-wa-backdrop" id="vehicleWaBackdrop"></div>
+    <div class="vehicle-wa-box" role="dialog" aria-modal="true" aria-label="Choisir un numéro WhatsApp">
+      <h3>Contacter via WhatsApp</h3>
+      <p class="vehicle-wa-hint">Choisissez un numéro : le message sera pré-rempli avec les caractéristiques du véhicule, prêt à l'envoi.</p>
+      <div class="vehicle-wa-numbers" id="vehicleWaNumbers"></div>
+      <button type="button" class="btn btn-ghost vehicle-wa-close" id="vehicleWaClose">Annuler</button>
+    </div>
   </div>
 
   <script src="script.js"></script>
